@@ -57,3 +57,9 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+## Winlator runtime
+
+Winlator Android runtime sources and assets are imported from commit
+`e113da42beefc39c69c8944b27c19c3703bfa856` of brunodev85/winlator-app under
+the GNU Lesser General Public License v2.1. The complete license and source
+provenance are included in `third_party/winlator/`.
