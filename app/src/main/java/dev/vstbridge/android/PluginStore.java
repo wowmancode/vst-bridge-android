@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 final class PluginStore {
@@ -48,8 +47,7 @@ final class PluginStore {
     PluginRecord importPlugin(Uri uri) throws IOException {
         ContentResolver resolver = context.getContentResolver();
         String displayName = displayName(resolver, uri);
-        String lower = displayName.toLowerCase(Locale.ROOT);
-        if (!lower.endsWith(".dll") && !lower.endsWith(".vst3")) {
+        if (!PluginFilePolicy.isSupportedFilename(displayName)) {
             throw new IOException("Choose a Windows .dll or .vst3 plug-in file");
         }
 

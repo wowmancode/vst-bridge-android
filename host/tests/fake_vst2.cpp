@@ -7,6 +7,7 @@
 namespace {
 
 vst_effect_t effect {};
+vst_rect_t editorRect {0, 0, 360, 640};
 
 void copyText (void* destination, std::size_t capacity, const char* source)
 {
@@ -19,6 +20,10 @@ intptr_t VST_FUNCTION_INTERFACE dispatch (
 {
     switch (opcode)
     {
+        case VST_EFFECT_OPCODE_EDITOR_GET_RECT:
+            if (pointer)
+                *static_cast<vst_rect_t**> (pointer) = &editorRect;
+            return 1;
         case VST_EFFECT_OPCODE_EFFECT_NAME:
             copyText (pointer, VST_BUFFER_SIZE_EFFECT_NAME, "Bridge Test Effect");
             return 1;

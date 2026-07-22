@@ -63,7 +63,7 @@ jobs:
           $scanOutput = & $hostExe.FullName scan ci-test $testPlugin.FullName
           if ($LASTEXITCODE -ne 0) { throw "VST2 scan failed: $LASTEXITCODE" }
           $metadata = $scanOutput | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.type -eq "metadata" }
-          if ($metadata.format -ne "vst2" -or $metadata.name -ne "Bridge Test Effect") { throw "Unexpected VST2 metadata" }
+          if ($metadata.format -ne "vst2" -or $metadata.name -ne "Bridge Test Effect" -or $metadata.editorWidth -ne 640 -or $metadata.editorHeight -ne 360) { throw "Unexpected VST2 metadata" }
           exit 0
 
       - name: Upload Windows host

@@ -93,7 +93,7 @@ public final class MainActivity extends Activity {
     private void choosePlugin() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/octet-stream");
+        intent.setType("*/*");
         startActivityForResult(intent, OPEN_PLUGIN);
     }
 

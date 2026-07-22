@@ -24,6 +24,7 @@ window on Android.
 - Validate Portable Executable machine type before starting the runtime (implemented)
 - Scan VST3 and VST2 DLL metadata in a crash-isolated child process (host implemented)
 - Return name, vendor, buses, parameters, and architecture to Android
+- Report native editor availability and dimensions (VST2 implemented)
 
 Success criterion: a known free x86-64 VST3 is detected on an ARM64 phone without
 opening its GUI.
@@ -31,6 +32,7 @@ opening its GUI.
 ## Milestone 3 — editor rendering
 
 - Embed or adapt an Android X server surface
+- Adapt the required Winlator runtime components in-process; no exported companion API exists
 - Launch the Wine editor at a phone-appropriate virtual desktop size
 - Forward touch, mouse, keyboard, clipboard, and window-resize events
 - Add per-plug-in DPI and renderer settings
