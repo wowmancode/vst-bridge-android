@@ -10,7 +10,7 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
         <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:background="#17212B">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="VST BRIDGE  •  AUDIO EDITOR" android:textColor="#69E6B3" android:textStyle="bold" android:textSize="13sp" />
-            <TextView android:id="981id/VstStatus" android:layout_width="0dp" android:layout_weight="1" android:maxLines="2" android:layout_height="wrap_content" android:text="Preparing runtime…" android:textColor="#EAF0F6" android:textSize="14sp" />
+            <TextView android:id="@+id/VstStatus" android:layout_width="0dp" android:layout_weight="1" android:maxLines="2" android:layout_height="wrap_content" android:text="Preparing runtime…" android:textColor="#EAF0F6" android:textSize="14sp" />
             <Button android:id="@+id/BTCloseSession" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_marginStart="12dp" android:text="Close" android:textAllCaps="false" />
         </LinearLayout>
 
@@ -18,14 +18,14 @@
             <ScrollView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.42" android:fillViewport="true">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TRACK 01  •  WINDOWS VST" android:textColor="#9AA9B8" android:textStyle="bold" android:textSize="12sp" />
-                <dev.vstbridge.android.AudioTimelineView android:id="2223id/AudioTimeline" android:layout_width="match_parent" android:layout_height="180dp" android:layout_marginTop="10dp" android:layout_marginBottom="12dp" />
+                <dev.vstbridge.android.AudioTimelineView android:id="@+id/AudioTimeline" android:layout_width="match_parent" android:layout_height="180dp" android:layout_marginTop="10dp" android:layout_marginBottom="12dp" />
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
                     <Button android:id="@+id/BTPlay" android:layout_width="wrap_content" android:layout_height="48dp" android:text="Play" android:textAllCaps="false" />
                     <Button android:id="@+id/BTStop" android:layout_width="wrap_content" android:layout_height="48dp" android:text="Stop" android:textAllCaps="false" />
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="48 kHz  •  256 samples" android:textColor="#9AA9B8" android:textSize="12sp" />
                 </LinearLayout>
                 <TextView android:id="@+id/VstLog" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:maxLines="3" android:text="Starting compatibility engine…" android:textColor="#9AA9B8" android:textSize="12sp" />
-                <Button android:id="3585 3500id/BTRetrySession" android:layout_width="match_parent" android:layout_height="44dp" android:visibility="gone" android:text="Retry plug-in" android:textAllCaps="false" />
+                <Button android:id="@+id/BTRetrySession" android:layout_width="match_parent" android:layout_height="44dp" android:visibility="gone" android:text="Retry plug-in" android:textAllCaps="false" />
             </LinearLayout>
             </ScrollView>
 
