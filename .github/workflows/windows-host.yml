@@ -1,14 +1,18 @@
-name: Windows VST3 host build
+name: Windows plugin host build
 
 on:
   push:
     branches: [main]
     paths:
       - "host/**"
+      - "app/src/main/java/dev/vstbridge/android/runtime/**"
+      - "app/src/main/assets/runtime/manifest.json"
       - ".github/workflows/windows-host.yml"
   pull_request:
     paths:
       - "host/**"
+      - "app/src/main/java/dev/vstbridge/android/runtime/**"
+      - "app/src/main/assets/runtime/manifest.json"
       - ".github/workflows/windows-host.yml"
   workflow_dispatch:
 
@@ -31,14 +35,21 @@ jobs:
           ref: v3.8.0_build_66
           path: .deps/vst3sdk
           submodules: recursive
+      - name: Check out clean-room VST2 SDK
+        uses: actions/checkout@v4
+        with:
+          repository: Xaymar/vst2sdk
+          ref: 339d4f31590bf77c0d0d248e09a380ac6285e069
+          path: .deps/vst2sdk
 
       - name: Configure x86-64 Windows host
         run: >-
           cmake -S host -B host/build -A x64
           -DVST3_SDK_ROOT="${{ github.workspace }}/.deps/vst3sdk"
+          -DVST2_SDK_ROOT="${{ github.workspace }}/.deps/vst2sdk"
 
       - name: Build host
-        run: cmake --build host/build --config Release --target vst-bridge-host
+        run: cmake --build host/build --config Release --target vst-bridge-host vst2-test-plugin
 
       - name: Smoke test command line
         shell: pwsh
@@ -47,6 +58,12 @@ jobs:
           if (-not $hostExe) { throw "Host executable was not produced" }
           & $hostExe.FullName
           if ($LASTEXITCODE -ne 2) { throw "Unexpected usage exit code: $LASTEXITCODE" }
+          $testPlugin = Get-ChildItem host/build -Recurse -Filter vst2-test-plugin.dll | Select-Object -First 1
+          if (-not $testPlugin) { throw "VST2 test plug-in was not produced" }
+          $scanOutput = & $hostExe.FullName scan ci-test $testPlugin.FullName
+          if ($LASTEXITCODE -ne 0) { throw "VST2 scan failed: $LASTEXITCODE" }
+          $metadata = $scanOutput | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.type -eq "metadata" }
+          if ($metadata.format -ne "vst2" -or $metadata.name -ne "Bridge Test Effect") { throw "Unexpected VST2 metadata" }
           exit 0
 
       - name: Upload Windows host
@@ -54,4 +71,43 @@ jobs:
         with:
           name: vst-bridge-windows-x86_64-host
           path: host/build/**/vst-bridge-host.exe
+          if-no-files-found: error
+
+  bundle-android:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download Windows host payload
+        uses: actions/download-artifact@v4
+        with:
+          name: vst-bridge-windows-x86_64-host
+          path: app/src/main/assets/runtime/windows-x86_64
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Build runtime APK
+        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
+
+      - name: Upload runtime APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vst-bridge-runtime-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error

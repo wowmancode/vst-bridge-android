@@ -7,6 +7,11 @@ if(NOT WIN32)
 endif()
 
 set(VST3_SDK_ROOT "" CACHE PATH "Path to a recursive checkout of Steinberg's VST3 SDK")
+set(VST2_SDK_ROOT "" CACHE PATH "Path to Xaymar clean-room VST2 SDK")
+if(NOT EXISTS "${VST2_SDK_ROOT}/include/vst.h")
+    message(FATAL_ERROR "Set VST2_SDK_ROOT to a vst2sdk checkout")
+endif()
+
 if(NOT EXISTS "${VST3_SDK_ROOT}/CMakeLists.txt")
     message(FATAL_ERROR "Set VST3_SDK_ROOT to a recursive VST3 SDK checkout")
 endif()
@@ -20,8 +25,17 @@ add_subdirectory("${VST3_SDK_ROOT}" "${CMAKE_CURRENT_BINARY_DIR}/vst3sdk" EXCLUD
 
 add_executable(vst-bridge-host
     src/main.cpp
+    src/vst2_scanner.cpp
+    src/vst2_scanner.h
     "${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/module_win32.cpp"
 )
+
+target_include_directories(vst-bridge-host PRIVATE "${VST2_SDK_ROOT}/include")
+
+add_library(vst2-test-plugin MODULE tests/fake_vst2.cpp)
+target_include_directories(vst2-test-plugin PRIVATE "${VST2_SDK_ROOT}/include")
+target_compile_features(vst2-test-plugin PRIVATE cxx_std_17)
+set_target_properties(vst2-test-plugin PROPERTIES PREFIX "" OUTPUT_NAME "vst2-test-plugin")
 
 target_compile_features(vst-bridge-host PRIVATE cxx_std_17)
 target_link_libraries(vst-bridge-host PRIVATE sdk_hosting)

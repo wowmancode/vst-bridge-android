@@ -33,7 +33,7 @@ public final class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         store = new PluginStore(this);
-        runtime = new DevelopmentRuntimeBridge();
+        runtime = new DevelopmentRuntimeBridge(this);
         setContentView(buildScreen());
         renderPlugins();
     }

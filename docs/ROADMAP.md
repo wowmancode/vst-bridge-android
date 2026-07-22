@@ -22,7 +22,7 @@ window on Android.
 - Start a Wine/Box64 container from an Android foreground service
 - Copy or bind the selected plug-in into the container
 - Validate Portable Executable machine type before starting the runtime (implemented)
-- Scan plug-in metadata in a crash-isolated child process
+- Scan VST3 and VST2 DLL metadata in a crash-isolated child process (host implemented)
 - Return name, vendor, buses, parameters, and architecture to Android
 
 Success criterion: a known free x86-64 VST3 is detected on an ARM64 phone without

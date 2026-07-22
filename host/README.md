@@ -1,17 +1,17 @@
-# Windows VST3 host
+# Windows plug-in host
 
 `vst-bridge-host.exe` is the x86-64 Windows payload that will run under Wine and
-Box64 on ARM64 Android. Its first implemented command loads a VST3 module using
-Steinberg's official hosting API and emits newline-delimited protocol v1 messages.
+Box64 on ARM64 Android. It scans VST3 modules through Steinberg’s official host
+API and VST2 `.dll` files through a pinned BSD-licensed clean-room ABI.
 
 ```text
 vst-bridge-host scan <plugin-id> <plugin-path>
 ```
 
-The scanner returns stable nonzero exit codes for command-line errors, load
-failures, empty factories, and modules with no audio-effect class. A separate Wine
-process will be used for each scan so third-party plug-in crashes are isolated.
+The scanner validates the DLL entry point, effect signature, metadata, channel
+counts, parameters, and editor capability. Stable nonzero exit codes cover bad
+commands, load failures, invalid effects, empty factories, and missing audio-effect
+classes. Each scan will run in a separate Wine process to isolate plug-in crashes.
 
-The VST3 SDK is not vendored. GitHub Actions checks out the pinned MIT-licensed
-`v3.8.0_build_66` release recursively and publishes the resulting Windows
-executable as a workflow artifact.
+Neither SDK is vendored. GitHub Actions checks out pinned revisions and publishes
+the resulting Windows executable as a workflow artifact.
