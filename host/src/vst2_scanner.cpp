@@ -128,6 +128,11 @@ void emitMetadata (const std::string& pluginId, std::uint64_t sequence, vst_effe
     const auto apiVersion = effect->control (effect, VST_EFFECT_OPCODE_VST_VERSION, 0, 0, nullptr, 0.f);
     const auto vendorVersion = effect->control (
         effect, VST_EFFECT_OPCODE_VENDOR_VERSION, 0, 0, nullptr, 0.f);
+    vst_rect_t* editorRect = nullptr;
+    if (effect->flags & VST_EFFECT_FLAG_EDITOR)
+        effect->control (effect, VST_EFFECT_OPCODE_EDITOR_GET_RECT, 0, 0, &editorRect, 0.f);
+    const int editorWidth = editorRect ? editorRect->right - editorRect->left : 0;
+    const int editorHeight = editorRect ? editorRect->bottom - editorRect->top : 0;
 
     std::cout << "{\"protocolVersion\":" << kProtocolVersion
               << ",\"pluginId\":\"" << jsonEscape (pluginId)
@@ -146,6 +151,8 @@ void emitMetadata (const std::string& pluginId, std::uint64_t sequence, vst_effe
               << ",\"audioInputs\":" << effect->num_inputs
               << ",\"audioOutputs\":" << effect->num_outputs
               << ",\"hasEditor\":" << ((effect->flags & VST_EFFECT_FLAG_EDITOR) ? "true" : "false")
+              << ",\"editorWidth\":" << editorWidth
+              << ",\"editorHeight\":" << editorHeight
               << "}\n";
 }
 

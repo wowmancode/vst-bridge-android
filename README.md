@@ -12,8 +12,8 @@ Android-compatible X server.
 
 ## Current prototype
 
-- Imports individual Windows `.dll` and `.vst3` files through Android's system
-  file picker; no broad storage permission is requested.
+- Imports `.dll` and `.vst3` files through Android’s system picker even when
+  storage reports an unknown MIME type; no broad storage permission is requested.
 - Keeps a private plug-in library and lets the user remove entries.
 - Detects whether the device exposes the `arm64-v8a` ABI.
 - Validates the Windows PE header and labels x86-64, 32-bit x86, and ARM64 binaries.
@@ -54,6 +54,7 @@ low-overhead IPC channel. Wine provides Win32 compatibility; Box64 translates
 x86-64 code on ARM64. Neither component itself implements VST hosting.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the integration plan and constraints.
+The Wine/Box64 embedding boundary is documented in [`docs/WINLATOR_INTEGRATION.md`](docs/WINLATOR_INTEGRATION.md).
 
 ## Local build (optional)
 
