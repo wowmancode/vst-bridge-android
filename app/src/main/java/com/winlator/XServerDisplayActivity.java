@@ -291,7 +291,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     extractGraphicsDriverFiles();
                     changeWineAudioDriver();
                 }
+                File requestedHost = new File(getExecFile());
+                long expectedSize = getIntent().getLongExtra("expected_host_size", -1);
+                if (!requestedHost.isFile() || (expectedSize >= 0 && requestedHost.length() != expectedSize)) {
+                    showVstFailure("Host verification failed before Wine launch: " + requestedHost.getPath()
+                            + " (found " + requestedHost.length() + " bytes, expected " + expectedSize + ").");
+                    return;
+                }
                 showVstStatus("Launching Windows plug-in…");
+                showVstLog("Host verified at C:\\vstbridge\\vst-bridge-host.exe (" + expectedSize + " bytes).");
                 setupXEnvironment();
             } catch (Throwable error) {
                 showVstFailure("Runtime startup failed: " + error.getClass().getSimpleName() + ": " + error.getMessage());
@@ -995,6 +1003,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     execPath = null;
                 }
             }
+        }
+
+        if (execPath != null && isVstSession()) {
+            return "\"" + execPath + "\"" + execArgs;
         }
 
         if (execPath != null) {
