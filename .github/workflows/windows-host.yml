@@ -5,13 +5,13 @@ on:
     branches: [main]
     paths:
       - "host/**"
-      - "app/src/main/java/dev/vstbridge/android/runtime/**"
+      - "app/src/main/**"
       - "app/src/main/assets/runtime/manifest.json"
       - ".github/workflows/windows-host.yml"
   pull_request:
     paths:
       - "host/**"
-      - "app/src/main/java/dev/vstbridge/android/runtime/**"
+      - "app/src/main/**"
       - "app/src/main/assets/runtime/manifest.json"
       - ".github/workflows/windows-host.yml"
   workflow_dispatch:
