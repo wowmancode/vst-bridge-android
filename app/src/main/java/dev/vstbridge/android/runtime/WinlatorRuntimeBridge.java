@@ -19,15 +19,19 @@ import java.util.Locale;
 public final class WinlatorRuntimeBridge implements RuntimeBridge {
     private final Context context;
     private final File hostPayload;
+    private final String hostInstallError;
 
     public WinlatorRuntimeBridge(Context context) {
         this.context = context.getApplicationContext();
         File installed = null;
+        String installError = null;
         try {
             installed = BundledHostInstaller.install(context);
-        } catch (IOException ignored) {
+        } catch (IOException error) {
+            installError = error.getMessage();
         }
         hostPayload = installed;
+        hostInstallError = installError;
     }
 
     @Override
@@ -47,7 +51,8 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
             return "This runtime requires a 64-bit ARM Android device.";
         }
         if (hostPayload == null) {
-            return "This APK does not contain the Windows host. Install the runtime APK artifact.";
+            return "Windows host installation failed: "
+                    + (hostInstallError == null ? "bundled asset unavailable" : hostInstallError);
         }
         if (!RootFS.find(context).isValid()) {
             return "Runtime files are bundled but not installed. Tap Set up runtime.";

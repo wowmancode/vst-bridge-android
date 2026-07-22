@@ -19,6 +19,7 @@ public final class BundledHostInstaller {
         }
 
         File destination = new File(directory, "vst-bridge-host.exe");
+        if (destination.isFile() && destination.length() > 0) return destination;
         File temporary = new File(directory, "vst-bridge-host.exe.tmp");
         try (InputStream input = context.getAssets().open(ASSET_PATH);
              FileOutputStream output = new FileOutputStream(temporary)) {
@@ -27,11 +28,10 @@ public final class BundledHostInstaller {
             while ((count = input.read(buffer)) != -1) {
                 output.write(buffer, 0, count);
             }
-            output.getFD().sync();
         } catch (IOException error) {
             //noinspection ResultOfMethodCallIgnored
             temporary.delete();
-            throw error;
+            throw new IOException("Could not extract " + ASSET_PATH + ": " + error.getClass().getSimpleName() + ": " + error.getMessage(), error);
         }
 
         if (destination.exists() && !destination.delete()) {

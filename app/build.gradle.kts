@@ -12,8 +12,8 @@ android {
         applicationId = "dev.vstbridge.android"
         minSdk = 26
         targetSdk = 28
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1-runtime-diagnostic"
 
         ndk {
             abiFilters += listOf("arm64-v8a")
@@ -28,6 +28,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

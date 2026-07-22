@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.winlator.BuildConfig;
 
 import dev.vstbridge.android.runtime.WinlatorRuntimeBridge;
 import dev.vstbridge.android.runtime.RuntimeBridge;
@@ -50,7 +51,7 @@ public final class MainActivity extends Activity {
         eyebrow.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(eyebrow);
 
-        TextView title = text("VST Bridge", 34, Color.rgb(234, 240, 246));
+        TextView title = text("VST Bridge " + BuildConfig.VERSION_NAME, 34, Color.rgb(234, 240, 246));
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title, margins(-1, -2, 0, 0, 0, 12));
 
