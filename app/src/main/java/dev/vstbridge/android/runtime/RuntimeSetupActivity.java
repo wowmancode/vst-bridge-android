@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.winlator.core.FileUtils;
@@ -67,7 +68,12 @@ public final class RuntimeSetupActivity extends Activity {
         action.setVisibility(View.GONE);
         action.setOnClickListener(view -> finish());
         root.addView(action);
-        return root;
+
+        ScrollView page = new ScrollView(this);
+        page.setFillViewport(true);
+        page.setBackgroundColor(Color.rgb(12, 18, 24));
+        page.addView(root, new ScrollView.LayoutParams(-1, -2));
+        return page;
     }
 
     private void beginSetup() {
