@@ -19,7 +19,6 @@ public final class BundledHostInstaller {
         }
 
         File destination = new File(directory, "vst-bridge-host.exe");
-        if (destination.isFile() && destination.length() > 0) return destination;
         File temporary = new File(directory, "vst-bridge-host.exe.tmp");
         try (InputStream input = context.getAssets().open(ASSET_PATH);
              FileOutputStream output = new FileOutputStream(temporary)) {

@@ -6,6 +6,7 @@ import android.os.Build;
 
 import com.winlator.XServerDisplayActivity;
 import com.winlator.container.Container;
+import com.winlator.container.ContainerManager;
 import com.winlator.core.FileUtils;
 import com.winlator.xenvironment.RootFS;
 
@@ -72,7 +73,9 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
 
         Container container = firstContainer();
         if (container == null) throw new IllegalStateException("The VST Bridge Wine environment is unavailable.");
-        File guestDir = new File(container.getRootDir(), ".wine/drive_c/vstbridge");
+        new ContainerManager(context).activateContainer(container);
+        File activeHome = new File(RootFS.find(context).getRootDir(), RootFS.HOME_PATH);
+        File guestDir = new File(activeHome, ".wine/drive_c/vstbridge");
         if (!guestDir.isDirectory() && !guestDir.mkdirs()) {
             throw new IllegalStateException("Could not create the VST directory in the Wine container.");
         }
@@ -81,8 +84,13 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
         String extension = request.pluginFile.getName().toLowerCase(Locale.ROOT).endsWith(".vst3")
                 ? ".vst3" : ".dll";
         File guestPlugin = new File(guestDir, "plugin-" + safeId(request.pluginId) + extension);
-        if (!FileUtils.copy(hostPayload, guestHost) || !FileUtils.copy(request.pluginFile, guestPlugin)) {
-            throw new IllegalStateException("Could not copy the host and plug-in into the Wine container.");
+        if (!FileUtils.copy(hostPayload, guestHost) || guestHost.length() != hostPayload.length()) {
+            throw new IllegalStateException("Windows host copy failed: expected " + hostPayload.length()
+                    + " bytes but found " + guestHost.length() + " at " + guestHost.getPath());
+        }
+        if (!FileUtils.copy(request.pluginFile, guestPlugin) || guestPlugin.length() != request.pluginFile.length()) {
+            throw new IllegalStateException("Plug-in copy failed: expected " + request.pluginFile.length()
+                    + " bytes but found " + guestPlugin.length() + ".");
         }
 
         String arguments = "editor " + safeId(request.pluginId)
@@ -94,6 +102,7 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
         intent.putExtra("plugin_name", request.pluginFile.getName());
         intent.putExtra("exec_file", guestHost.getAbsolutePath());
         intent.putExtra("exec_args", arguments);
+        intent.putExtra("expected_host_size", guestHost.length());
         context.startActivity(intent);
     }
 
