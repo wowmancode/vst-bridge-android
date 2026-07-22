@@ -12,8 +12,8 @@ android {
         applicationId = "dev.vstbridge.android"
         minSdk = 26
         targetSdk = 28
-        versionCode = 7
-        versionName = "0.4.2-host-path-fix"
+        versionCode = 8
+        versionName = "0.4.3-wine-launch-fix"
 
         ndk {
             abiFilters += listOf("arm64-v8a")

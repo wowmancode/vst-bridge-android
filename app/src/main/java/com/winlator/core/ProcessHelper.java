@@ -13,7 +13,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,10 +71,7 @@ public abstract class ProcessHelper {
             for (String name : envVars) environment.put(name, envVars.get(name));
 
             java.lang.Process process = processBuilder.start();
-            Field pidField = process.getClass().getDeclaredField("pid");
-            pidField.setAccessible(true);
-            pid = pidField.getInt(process);
-            pidField.setAccessible(false);
+            pid = (int)process.pid();
 
             if (!debugCallbacks.isEmpty()) {
                 createDebugThread(process.getInputStream());
@@ -84,7 +80,14 @@ public abstract class ProcessHelper {
 
             if (terminationCallback != null) createWaitForThread(process, terminationCallback);
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+            synchronized (debugCallbacks) {
+                for (Callback<String> callback : debugCallbacks) {
+                    callback.call("Process start failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                }
+            }
+            if (terminationCallback != null) terminationCallback.call(127);
+        }
         return pid;
     }
 

@@ -306,8 +306,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
         });
         if (isVstSession()) vstHandler.postDelayed(() -> {
-            if (!vstWindowMapped) showVstFailure("The plug-in did not create an editor window within 60 seconds. See the last runtime message below.");
-        }, 60000);
+            if (!vstWindowMapped) showVstFailure("The plug-in did not create an editor window within 90 seconds. See the last runtime message below.");
+        }, 90000);
     }
 
     @Override
@@ -582,6 +582,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         guestProgramLauncherComponent.setEnvVars(envVars);
+        guestProgramLauncherComponent.setStartCallback(pid -> {
+            if (pid > 0) {
+                showVstStatus("Wine process started • waiting for editor…");
+                showVstLog("Box64/Wine started as Android process " + pid + ". Waiting for the plug-in window.");
+            } else showVstFailure("Box64/Wine could not start. Check the runtime message below.");
+        });
         guestProgramLauncherComponent.setTerminationCallback(this::onGuestTerminated);
         environment.addComponent(guestProgramLauncherComponent);
 
@@ -1003,10 +1009,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     execPath = null;
                 }
             }
-        }
-
-        if (execPath != null && isVstSession()) {
-            return "\"" + execPath + "\"" + execArgs;
         }
 
         if (execPath != null) {
