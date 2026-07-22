@@ -18,7 +18,7 @@ window on Android.
 
 ## Milestone 2 — headless VST validation
 
-- Build a minimal x86-64 Windows host executable in CI
+- Build a minimal x86-64 Windows host executable in CI (scanner implemented)
 - Start a Wine/Box64 container from an Android foreground service
 - Copy or bind the selected plug-in into the container
 - Validate Portable Executable machine type before starting the runtime (implemented)

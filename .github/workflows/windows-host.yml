@@ -1,0 +1,57 @@
+name: Windows VST3 host build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "host/**"
+      - ".github/workflows/windows-host.yml"
+  pull_request:
+    paths:
+      - "host/**"
+      - ".github/workflows/windows-host.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Check out VST3 SDK 3.8.0
+        uses: actions/checkout@v4
+        with:
+          repository: steinbergmedia/vst3sdk
+          ref: v3.8.0_build_66
+          path: .deps/vst3sdk
+          submodules: recursive
+
+      - name: Configure x86-64 Windows host
+        run: >-
+          cmake -S host -B host/build -A x64
+          -DVST3_SDK_ROOT="${{ github.workspace }}/.deps/vst3sdk"
+
+      - name: Build host
+        run: cmake --build host/build --config Release --target vst-bridge-host
+
+      - name: Smoke test command line
+        shell: pwsh
+        run: |
+          $hostExe = Get-ChildItem host/build -Recurse -Filter vst-bridge-host.exe | Select-Object -First 1
+          if (-not $hostExe) { throw "Host executable was not produced" }
+          & $hostExe.FullName
+          if ($LASTEXITCODE -ne 2) { throw "Unexpected usage exit code: $LASTEXITCODE" }
+          exit 0
+
+      - name: Upload Windows host
+        uses: actions/upload-artifact@v4
+        with:
+          name: vst-bridge-windows-x86_64-host
+          path: host/build/**/vst-bridge-host.exe
+          if-no-files-found: error
