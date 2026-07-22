@@ -76,6 +76,13 @@ final class PluginStore {
             throw error;
         }
 
+        PeInspector.Architecture architecture = PeInspector.inspect(destination);
+        if (architecture == PeInspector.Architecture.NOT_PE) {
+            //noinspection ResultOfMethodCallIgnored
+            destination.delete();
+            throw new IOException("The selected file is not a valid Windows plug-in binary");
+        }
+
         PluginRecord plugin = new PluginRecord(
                 id, displayName, destination.getAbsolutePath(), copied, System.currentTimeMillis());
         List<PluginRecord> plugins = load();

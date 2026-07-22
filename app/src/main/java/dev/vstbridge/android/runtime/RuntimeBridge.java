@@ -1,6 +1,5 @@
 package dev.vstbridge.android.runtime;
 
-import java.io.File;
 
 public interface RuntimeBridge {
     enum State { READY, NOT_INSTALLED, UNSUPPORTED_DEVICE }
@@ -9,5 +8,5 @@ public interface RuntimeBridge {
 
     String statusMessage();
 
-    void launch(File windowsPlugin) throws RuntimeException;
+    void launch(LaunchRequest request) throws RuntimeException;
 }
