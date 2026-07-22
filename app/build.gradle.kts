@@ -12,8 +12,8 @@ android {
         applicationId = "dev.vstbridge.android"
         minSdk = 26
         targetSdk = 28
-        versionCode = 4
-        versionName = "0.3.0-private-runtime"
+        versionCode = 5
+        versionName = "0.4.0-audio-workspace"
 
         ndk {
             abiFilters += listOf("arm64-v8a")

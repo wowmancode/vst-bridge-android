@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -25,11 +28,16 @@ import java.util.Locale;
 
 public final class MainActivity extends Activity {
     private static final int OPEN_PLUGIN = 100;
+    private static final int OPEN_AUDIO = 101;
     private PluginStore store;
     private RuntimeBridge runtime;
     private TextView runtimeStatus;
     private LinearLayout pluginList;
     private TextView emptyState;
+    private TextView audioStatus;
+    private AudioTimelineView audioTimeline;
+    private MediaPlayer audioPlayer;
+    private final Handler transportHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +64,31 @@ public final class MainActivity extends Activity {
         root.addView(title, margins(-1, -2, 0, 0, 0, 12));
 
         TextView intro = text(
-                "Import a Windows VST2 or VST3 plug-in, then open its editor through the emulation runtime.",
+                "Load an audio clip, import a Windows VST2 plug-in, and open its editor beside the native Android timeline.",
                 16, Color.rgb(154, 169, 184));
-        root.addView(intro, margins(-1, -2, 0, 0, 0, 20));
+        root.addView(intro, margins(-1, -2, 0, 0, 0, 16));
+
+        LinearLayout session = panel();
+        TextView sessionTitle = text("Audio session", 18, Color.rgb(234, 240, 246));
+        sessionTitle.setTypeface(Typeface.DEFAULT_BOLD);
+        session.addView(sessionTitle);
+        audioStatus = text("No audio clip loaded • dry preview", 13, Color.rgb(154, 169, 184));
+        session.addView(audioStatus, margins(-1, -2, 0, 2, 0, 8));
+        audioTimeline = new AudioTimelineView(this, null);
+        session.addView(audioTimeline, margins(-1, 110, 0, 0, 0, 8));
+        LinearLayout transport = new LinearLayout(this);
+        Button importAudio = smallButton("Load audio");
+        importAudio.setOnClickListener(view -> chooseAudio());
+        Button playAudio = smallButton("Play");
+        playAudio.setOnClickListener(view -> playAudio());
+        Button stopAudio = smallButton("Stop");
+        stopAudio.setOnClickListener(view -> stopAudio());
+        transport.addView(importAudio);
+        transport.addView(playAudio);
+        transport.addView(stopAudio);
+        session.addView(transport);
+        session.addView(text("Audio preview is native Android. The loaded Windows VST editor opens in the right-side panel; real-time VST processing is still experimental.", 12, Color.rgb(154, 169, 184)));
+        root.addView(session, margins(-1, -2, 0, 0, 0, 12));
 
         LinearLayout runtimeCard = panel();
         TextView runtimeTitle = text("Runtime", 13, Color.rgb(154, 169, 184));
@@ -106,6 +136,40 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void chooseAudio() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("audio/*");
+        startActivityForResult(intent, OPEN_AUDIO);
+    }
+
+    private void playAudio() {
+        if (audioPlayer == null) {
+            Toast.makeText(this, "Load an audio clip first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        audioPlayer.start();
+        audioStatus.setText("Playing dry audio preview");
+        updatePlayhead();
+    }
+
+    private void stopAudio() {
+        if (audioPlayer != null) {
+            audioPlayer.pause();
+            audioPlayer.seekTo(0);
+        }
+        transportHandler.removeCallbacksAndMessages(null);
+        if (audioTimeline != null) audioTimeline.setPlayhead(0f);
+        if (audioStatus != null) audioStatus.setText("Audio ready • dry preview");
+    }
+
+    private void updatePlayhead() {
+        if (audioPlayer == null || !audioPlayer.isPlaying()) return;
+        int duration = audioPlayer.getDuration();
+        audioTimeline.setPlayhead(duration > 0 ? audioPlayer.getCurrentPosition() / (float) duration : 0f);
+        transportHandler.postDelayed(this::updatePlayhead, 50);
+    }
+
     private void choosePlugin() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -116,9 +180,25 @@ public final class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != OPEN_PLUGIN || resultCode != RESULT_OK || data == null) return;
+        if (resultCode != RESULT_OK || data == null) return;
         Uri uri = data.getData();
         if (uri == null) return;
+        if (requestCode == OPEN_AUDIO) {
+            try {
+                getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (SecurityException ignored) {}
+            getSharedPreferences("vstbridge", MODE_PRIVATE).edit().putString("audioUri", uri.toString()).apply();
+            if (audioPlayer != null) audioPlayer.release();
+            audioPlayer = MediaPlayer.create(this, uri);
+            if (audioPlayer == null) {
+                audioStatus.setText("Could not load this audio file");
+            } else {
+                audioStatus.setText("Audio ready • dry preview");
+                audioPlayer.setOnCompletionListener(player -> stopAudio());
+            }
+            return;
+        }
+        if (requestCode != OPEN_PLUGIN) return;
         try {
             store.importPlugin(uri);
             renderPlugins();
@@ -178,6 +258,15 @@ public final class MainActivity extends Activity {
         actions.addView(open, margins(-2, -2, 8, 0, 0, 0));
         card.addView(actions, margins(-1, -2, 0, 10, 0, 0));
         return card;
+    }
+
+
+
+    @Override
+    protected void onDestroy() {
+        transportHandler.removeCallbacksAndMessages(null);
+        if (audioPlayer != null) audioPlayer.release();
+        super.onDestroy();
     }
 
     private LinearLayout panel() {
