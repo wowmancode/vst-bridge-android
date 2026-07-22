@@ -27,6 +27,8 @@ add_executable(vst-bridge-host
     src/main.cpp
     src/vst2_scanner.cpp
     src/vst2_scanner.h
+    src/vst2_editor.cpp
+    src/vst2_editor.h
     "${VST3_SDK_ROOT}/public.sdk/source/vst/hosting/module_win32.cpp"
 )
 

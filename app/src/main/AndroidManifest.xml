@@ -2,6 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
 
     <uses-feature
         android:name="android.hardware.audio.low_latency"
@@ -9,11 +18,14 @@
 
     <application
         android:allowBackup="true"
+        android:allowAudioPlaybackCapture="true"
+        android:extractNativeLibs="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="VST Bridge"
         android:supportsRtl="true"
         android:theme="@style/Theme.VstBridge">
         <activity
-            android:name=".MainActivity"
+            android:name="dev.vstbridge.android.MainActivity"
             android:exported="true"
             android:screenOrientation="unspecified">
             <intent-filter>
@@ -21,5 +33,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name="com.winlator.MainActivity" android:exported="false" android:theme="@style/AppThemeDark" android:screenOrientation="sensor" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
+        <activity android:name="com.winlator.XServerDisplayActivity" android:exported="false" android:theme="@style/AppThemeFullscreenDark" android:supportsPictureInPicture="true" android:launchMode="singleTask" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" android:screenOrientation="sensorLandscape" />
+        <activity android:name="com.winlator.ControlsEditorActivity" android:exported="false" android:theme="@style/AppThemeFullscreenDark" android:screenOrientation="sensorLandscape" />
+        <activity android:name="com.winlator.ExternalControllerBindingsActivity" android:exported="false" android:theme="@style/AppThemeDark" android:screenOrientation="sensor" />
+
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.FileProvider" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
     </application>
 </manifest>

@@ -22,7 +22,7 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Check out source
@@ -76,7 +76,7 @@ jobs:
   bundle-android:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Check out source
@@ -96,6 +96,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+      - name: Install native toolchain
+        run: sdkmanager "ndk;24.0.8215888" "cmake;3.22.1"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4

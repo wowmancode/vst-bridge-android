@@ -1,4 +1,5 @@
 #include "vst2_scanner.h"
+#include "vst2_editor.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "public.sdk/source/vst/hosting/module.h"
 
@@ -137,9 +138,10 @@ int scan (const std::string& pluginId, const std::string& path)
 
 int wmain (int argc, wchar_t* argv[])
 {
-    if (argc != 4 || std::wstring (argv[1]) != L"scan")
+    const std::wstring command (argc > 1 ? argv[1] : L"");
+    if (argc != 4 || (command != L"scan" && command != L"editor"))
     {
-        std::cerr << "usage: vst-bridge-host scan <plugin-id> <plugin-path>\n";
+        std::cerr << "usage: vst-bridge-host <scan|editor> <plugin-id> <plugin-path>\n";
         return 2;
     }
     const std::string pluginId = utf8 (argv[2]);
@@ -151,6 +153,11 @@ int wmain (int argc, wchar_t* argv[])
     for (wchar_t& character : extension)
         character = static_cast<wchar_t> (towlower (character));
     if (extension == L".dll")
-        return scanVst2 (pluginId, argv[3]);
-    return scan (pluginId, utf8 (argv[3]));
+        return command == L"editor" ? openVst2Editor(pluginId, argv[3]) : scanVst2(pluginId, argv[3]);
+    if (command == L"editor")
+    {
+        std::cerr << "VST3 editor hosting is not implemented yet; VST2 DLL editors are supported\n";
+        return 6;
+    }
+    return scan(pluginId, utf8(argv[3]));
 }

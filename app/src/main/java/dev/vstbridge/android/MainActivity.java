@@ -14,7 +14,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import dev.vstbridge.android.runtime.DevelopmentRuntimeBridge;
+import dev.vstbridge.android.runtime.WinlatorRuntimeBridge;
 import dev.vstbridge.android.runtime.RuntimeBridge;
 
 import java.io.File;
@@ -26,6 +26,7 @@ public final class MainActivity extends Activity {
     private static final int OPEN_PLUGIN = 100;
     private PluginStore store;
     private RuntimeBridge runtime;
+    private TextView runtimeStatus;
     private LinearLayout pluginList;
     private TextView emptyState;
 
@@ -33,7 +34,7 @@ public final class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         store = new PluginStore(this);
-        runtime = new DevelopmentRuntimeBridge(this);
+        runtime = new WinlatorRuntimeBridge(this);
         setContentView(buildScreen());
         renderPlugins();
     }
@@ -62,8 +63,11 @@ public final class MainActivity extends Activity {
         TextView runtimeTitle = text("Runtime", 13, Color.rgb(154, 169, 184));
         runtimeTitle.setTypeface(Typeface.DEFAULT_BOLD);
         runtimeCard.addView(runtimeTitle);
-        runtimeCard.addView(text(runtime.statusMessage(), 15, Color.rgb(234, 240, 246)),
-                margins(-1, -2, 0, 4, 0, 0));
+        runtimeStatus = text(runtime.statusMessage(), 15, Color.rgb(234, 240, 246));
+        runtimeCard.addView(runtimeStatus, margins(-1, -2, 0, 4, 0, 8));
+        Button setupRuntime = smallButton("Set up runtime");
+        setupRuntime.setOnClickListener(view -> WinlatorRuntimeBridge.openSetup(this));
+        runtimeCard.addView(setupRuntime);
         root.addView(runtimeCard, margins(-1, -2, 0, 0, 0, 16));
 
         Button importButton = new Button(this);
@@ -88,6 +92,17 @@ public final class MainActivity extends Activity {
         scroll.addView(pluginList);
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         return root;
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (runtimeStatus != null) {
+            runtime = new WinlatorRuntimeBridge(this);
+            runtimeStatus.setText(runtime.statusMessage());
+            renderPlugins();
+        }
     }
 
     private void choosePlugin() {
