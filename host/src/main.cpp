@@ -1,9 +1,11 @@
+#include "vst2_scanner.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "public.sdk/source/vst/hosting/module.h"
 
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <cwctype>
 
 #include <windows.h>
 
@@ -140,5 +142,15 @@ int wmain (int argc, wchar_t* argv[])
         std::cerr << "usage: vst-bridge-host scan <plugin-id> <plugin-path>\n";
         return 2;
     }
-    return scan (utf8 (argv[2]), utf8 (argv[3]));
+    const std::string pluginId = utf8 (argv[2]);
+    std::wstring path (argv[3]);
+    std::wstring extension;
+    const auto dot = path.find_last_of (L".");
+    if (dot != std::wstring::npos)
+        extension = path.substr (dot);
+    for (wchar_t& character : extension)
+        character = static_cast<wchar_t> (towlower (character));
+    if (extension == L".dll")
+        return scanVst2 (pluginId, argv[3]);
+    return scan (pluginId, utf8 (argv[3]));
 }

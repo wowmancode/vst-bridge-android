@@ -1,0 +1,9 @@
+{
+  "protocolVersion": 1,
+  "host": {
+    "architecture": "x86_64",
+    "operatingSystem": "windows",
+    "path": "windows-x86_64/vst-bridge-host.exe"
+  },
+  "formats": ["vst2", "vst3"]
+}
