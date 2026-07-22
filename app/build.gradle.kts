@@ -45,6 +45,10 @@ android {
     packaging {
         jniLibs.useLegacyPackaging = true
     }
+
+    lint {
+        disable += "ExpiredTargetSdkVersion"
+    }
 }
 
 dependencies {
