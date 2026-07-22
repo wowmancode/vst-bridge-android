@@ -16,6 +16,8 @@ Android-compatible X server.
   file picker; no broad storage permission is requested.
 - Keeps a private plug-in library and lets the user remove entries.
 - Detects whether the device exposes the `arm64-v8a` ABI.
+- Validates the Windows PE header and labels x86-64, 32-bit x86, and ARM64 binaries.
+- Defines a versioned JSON launch/control protocol for the Wine-side host.
 - Disables **Open editor** until a runtime provider reports that it is ready.
 - Builds a debug APK entirely on GitHub Actions.
 

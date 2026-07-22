@@ -2,7 +2,6 @@ package dev.vstbridge.android.runtime;
 
 import android.os.Build;
 
-import java.io.File;
 import java.util.Arrays;
 
 public final class DevelopmentRuntimeBridge implements RuntimeBridge {
@@ -21,7 +20,7 @@ public final class DevelopmentRuntimeBridge implements RuntimeBridge {
     }
 
     @Override
-    public void launch(File windowsPlugin) {
+    public void launch(LaunchRequest request) {
         throw new IllegalStateException(statusMessage());
     }
 }

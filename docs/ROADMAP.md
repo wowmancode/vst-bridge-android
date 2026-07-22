@@ -21,6 +21,7 @@ window on Android.
 - Build a minimal x86-64 Windows host executable in CI
 - Start a Wine/Box64 container from an Android foreground service
 - Copy or bind the selected plug-in into the container
+- Validate Portable Executable machine type before starting the runtime (implemented)
 - Scan plug-in metadata in a crash-isolated child process
 - Return name, vendor, buses, parameters, and architecture to Android
 

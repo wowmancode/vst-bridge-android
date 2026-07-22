@@ -124,9 +124,11 @@ public final class MainActivity extends Activity {
         TextView name = text(plugin.name, 17, Color.rgb(234, 240, 246));
         name.setTypeface(Typeface.DEFAULT_BOLD);
         card.addView(name);
+        PeInspector.Architecture architecture = PeInspector.inspect(new File(plugin.path));
         String detail = String.format(Locale.US, "%.1f MB  •  %s",
                 plugin.size / 1048576.0,
                 plugin.name.toLowerCase(Locale.ROOT).endsWith(".vst3") ? "VST3" : "VST2");
+        detail += "  •  " + architecture.label;
         card.addView(text(detail, 13, Color.rgb(154, 169, 184)));
 
         LinearLayout actions = new LinearLayout(this);
@@ -137,10 +139,11 @@ public final class MainActivity extends Activity {
             renderPlugins();
         });
         Button open = smallButton("Open editor");
-        open.setEnabled(runtime.state() == RuntimeBridge.State.READY);
+        open.setEnabled(runtime.state() == RuntimeBridge.State.READY && architecture.supported);
         open.setOnClickListener(view -> {
             try {
-                runtime.launch(new File(plugin.path));
+                runtime.launch(new dev.vstbridge.android.runtime.LaunchRequest(
+                        plugin.id, new File(plugin.path), 48000, 256, true));
             } catch (RuntimeException error) {
                 Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
             }
