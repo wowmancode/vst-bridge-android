@@ -117,12 +117,15 @@ public final class MainActivity extends Activity {
         emptyState = text("No plug-ins imported yet.", 15, Color.rgb(154, 169, 184));
         root.addView(emptyState, margins(-1, -2, 0, 12, 0, 0));
 
-        ScrollView scroll = new ScrollView(this);
         pluginList = new LinearLayout(this);
         pluginList.setOrientation(LinearLayout.VERTICAL);
-        scroll.addView(pluginList);
-        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-        return root;
+        root.addView(pluginList, new LinearLayout.LayoutParams(-1, -2));
+
+        ScrollView page = new ScrollView(this);
+        page.setFillViewport(true);
+        page.setBackgroundColor(Color.rgb(12, 18, 24));
+        page.addView(root, new ScrollView.LayoutParams(-1, -2));
+        return page;
     }
 
 

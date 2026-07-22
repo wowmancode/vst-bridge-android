@@ -16,7 +16,7 @@ Android-compatible X server.
 - Keeps a private plug-in library and lets the user remove entries.
 - Detects whether the device exposes the `arm64-v8a` ABI.
 - Validates the Windows PE header and labels x86-64, 32-bit x86, and ARM64 binaries.
-- Shows a native Android audio timeline and dry clip transport beside the loaded Windows VST editor.
+- Shows a native Android audio timeline and dry clip transport beside the loaded Windows VST editor. All VST Bridge screens and editor controls scroll on small displays.
 - Maps imported plug-ins into a private Wine environment and launches the Windows host with observable startup stages.
 - Cloud-builds an x86-64 Windows host that scans VST3 modules and VST2 `.dll` files.
 - Produces a separate runtime APK with the tested Windows host embedded.
