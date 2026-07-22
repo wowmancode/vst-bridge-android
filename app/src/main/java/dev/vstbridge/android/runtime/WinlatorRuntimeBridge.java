@@ -85,13 +85,15 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
             throw new IllegalStateException("Could not copy the host and plug-in into the Wine container.");
         }
 
-        String command = guestHost.getAbsolutePath()
-                + " editor " + safeId(request.pluginId)
+        String arguments = "editor " + safeId(request.pluginId)
                 + " C:\\vstbridge\\" + guestPlugin.getName();
         Intent intent = new Intent(context, XServerDisplayActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("container_id", container.id);
-        intent.putExtra("exec_path", command);
+        intent.putExtra("vst_bridge_session", true);
+        intent.putExtra("plugin_name", request.pluginFile.getName());
+        intent.putExtra("exec_file", guestHost.getAbsolutePath());
+        intent.putExtra("exec_args", arguments);
         context.startActivity(intent);
     }
 

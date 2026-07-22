@@ -6,8 +6,12 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,8 +19,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -133,6 +139,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private MagnifierView magnifierView;
     private DebugDialog debugDialog;
     private int frameRatingWindowId = -1;
+    private TextView vstStatus;
+    private TextView vstLog;
+    private boolean vstWindowMapped;
+    private MediaPlayer vstAudioPlayer;
+    private final Handler vstHandler = new Handler(Looper.getMainLooper());
     private Win32AppWorkarounds win32AppWorkarounds;
     private String screenEffectProfile;
 
@@ -142,7 +153,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         super.onCreate(savedInstanceState);
         AppUtils.hideSystemUI(this);
         AppUtils.keepScreenOn(this);
-        setContentView(R.layout.xserver_display_activity);
+        setContentView(isVstSession() ? R.layout.vst_editor_activity : R.layout.xserver_display_activity);
+        if (isVstSession()) setupVstShell();
 
         final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -155,8 +167,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         NavigationView navigationView = findViewById(R.id.NavigationView);
         ProcessHelper.removeAllDebugCallbacks();
-        boolean enableLogs = preferences.getBoolean("enable_wine_debug", false) || preferences.getInt("box64_logs", 0) >= 1;
-        if (enableLogs) ProcessHelper.addDebugCallback(debugDialog = new DebugDialog(this));
+        boolean enableLogs = isVstSession() || preferences.getBoolean("enable_wine_debug", false) || preferences.getInt("box64_logs", 0) >= 1;
+        if (isVstSession()) ProcessHelper.addDebugCallback(this::showVstLog);
+        else if (enableLogs) ProcessHelper.addDebugCallback(debugDialog = new DebugDialog(this));
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.menu_item_logs).setVisible(enableLogs);
         navigationView.setNavigationItemSelectedListener(this);
@@ -219,7 +232,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
             else {
                 Intent intent = getIntent();
-                if (intent.hasExtra("exec_path")) win32AppWorkarounds.applyStartupWorkarounds(FileUtils.getName(intent.getStringExtra("exec_path")));
+                if (hasExecRequest()) win32AppWorkarounds.applyStartupWorkarounds(FileUtils.getName(getExecFile()));
             }
 
             this.graphicsDriver = GraphicsDrivers.parseIdentifiers(graphicsDriver);
@@ -228,12 +241,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             this.dxwrapperConfig = DXWrappers.parseConfigs(dxwrapper, dxwrapperConfig);
         }
 
-        preloaderDialog.show(R.string.starting_up);
+        if (isVstSession()) showVstStatus("Preparing Wine environment…");
+        else preloaderDialog.show(R.string.starting_up);
 
         inputControlsManager = new InputControlsManager(this);
         xServer = new XServer(this, screenInfo);
         xServer.setWinHandler(winHandler);
-        final boolean[] flags = {false, shortcut != null || getIntent().hasExtra("exec_path")};
+        final boolean[] flags = {false, shortcut != null || hasExecRequest()};
         xServer.windowManager.addOnWindowModificationListener(new WindowManager.OnWindowModificationListener() {
             @Override
             public void onUpdateWindowContent(Window window) {
@@ -246,6 +260,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     xServerView.getRenderer().setCursorVisible(true);
                     preloaderDialog.closeOnUiThread();
                     flags[0] = true;
+                    vstWindowMapped = true;
+                    showVstStatus("Plug-in editor ready");
+                    showVstLog("Windows editor connected to the VST Bridge surface.");
                 }
 
                 if (flags[1] && window.attributes.isViewable() && window.isDesktopWindow()) {
@@ -266,13 +283,23 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         setupUI();
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            if (!isGenerateWineprefix()) {
-                setupWineSystemFiles();
-                extractGraphicsDriverFiles();
-                changeWineAudioDriver();
+            try {
+                if (!isGenerateWineprefix()) {
+                    showVstStatus("Checking Wine prefix…");
+                    setupWineSystemFiles();
+                    showVstStatus("Starting graphics and audio…");
+                    extractGraphicsDriverFiles();
+                    changeWineAudioDriver();
+                }
+                showVstStatus("Launching Windows plug-in…");
+                setupXEnvironment();
+            } catch (Throwable error) {
+                showVstFailure("Runtime startup failed: " + error.getClass().getSimpleName() + ": " + error.getMessage());
             }
-            setupXEnvironment();
         });
+        if (isVstSession()) vstHandler.postDelayed(() -> {
+            if (!vstWindowMapped) showVstFailure("The plug-in did not create an editor window within 60 seconds. See the last runtime message below.");
+        }, 60000);
     }
 
     @Override
@@ -327,6 +354,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     protected void onDestroy() {
+        vstHandler.removeCallbacksAndMessages(null);
+        if (vstAudioPlayer != null) vstAudioPlayer.release();
+        ProcessHelper.removeAllDebugCallbacks();
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
         super.onDestroy();
@@ -334,6 +364,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     public void onBackPressed() {
+        if (isVstSession()) {
+            finish();
+            return;
+        }
         if (environment != null) {
             if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 drawerLayout.openDrawer(GravityCompat.START);
@@ -417,10 +451,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (environment != null) environment.stopEnvironmentComponents();
 
         Intent intent = getIntent();
-        if (intent.hasExtra("exec_path")) {
+        if (hasExecRequest()) {
             AppUtils.RestartApplicationOptions options = new AppUtils.RestartApplicationOptions();
             options.containerId = container.id;
-            options.startPath = FileUtils.getDirname(intent.getStringExtra("exec_path"));
+            options.startPath = FileUtils.getDirname(getExecFile());
             AppUtils.restartApplication(this, options);
         }
         else AppUtils.restartApplication(this);
@@ -494,7 +528,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (container != null) {
             if (container.getHUDMode() == FrameRating.Mode.FULL.ordinal()) envVars.put("X11_WND_GPU_INFO", "1");
 
-            String desktopName = shortcut != null || getIntent().hasExtra("exec_path") ? "nogui" : "shell";
+            String desktopName = shortcut != null || hasExecRequest() ? "nogui" : "shell";
             String guestExecutable = "wine explorer /desktop="+desktopName+","+xServer.screenInfo+" "+getWineStartCommand();
             guestProgramLauncherComponent.setGuestExecutable(guestExecutable);
 
@@ -540,7 +574,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         guestProgramLauncherComponent.setEnvVars(envVars);
-        guestProgramLauncherComponent.setTerminationCallback((status) -> exit());
+        guestProgramLauncherComponent.setTerminationCallback(this::onGuestTerminated);
         environment.addComponent(guestProgramLauncherComponent);
 
         if (isGenerateWineprefix()) {
@@ -951,8 +985,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
         else {
             Intent intent = getIntent();
-            if (intent.hasExtra("exec_path")) {
-                execPath = WineUtils.unixToDOSPath(intent.getStringExtra("exec_path"), container);
+            if (hasExecRequest()) {
+                execPath = WineUtils.unixToDOSPath(getExecFile(), container);
+                String explicitArgs = intent.getStringExtra("exec_args");
+                if (explicitArgs != null && !explicitArgs.isEmpty()) execArgs = " " + explicitArgs;
 
                 if (execPath.endsWith(".lnk")) {
                     cmdArgs = "\""+execPath+"\"";
@@ -979,6 +1015,89 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             overrideEnvVars.remove("EXTRA_EXEC_ARGS");
         }
         return "C:\\windows\\winhandler.exe "+cmdArgs;
+    }
+
+    private boolean isVstSession() {
+        return getIntent().getBooleanExtra("vst_bridge_session", false);
+    }
+
+    private boolean hasExecRequest() {
+        return getIntent().hasExtra("exec_file") || getIntent().hasExtra("exec_path");
+    }
+
+    private String getExecFile() {
+        String value = getIntent().getStringExtra("exec_file");
+        return value != null ? value : getIntent().getStringExtra("exec_path");
+    }
+
+    private void setupVstShell() {
+        vstStatus = findViewById(R.id.VstStatus);
+        vstLog = findViewById(R.id.VstLog);
+        TextView pluginName = findViewById(R.id.VstPluginName);
+        String label = getIntent().getStringExtra("plugin_name");
+        pluginName.setText(label == null ? "PLUG-IN EDITOR" : label);
+        findViewById(R.id.BTCloseSession).setOnClickListener(view -> finish());
+        Button retry = findViewById(R.id.BTRetrySession);
+        retry.setOnClickListener(view -> recreate());
+        dev.vstbridge.android.AudioTimelineView timeline = findViewById(R.id.AudioTimeline);
+        String audioUri = getSharedPreferences("vstbridge", MODE_PRIVATE).getString("audioUri", null);
+        if (audioUri != null) vstAudioPlayer = MediaPlayer.create(this, Uri.parse(audioUri));
+        if (vstAudioPlayer != null) showVstLog("Audio clip loaded • dry preview until VST processing is connected.");
+        findViewById(R.id.BTPlay).setOnClickListener(view -> {
+            if (vstAudioPlayer == null) {
+                showVstLog("Load an audio clip from the main workspace first.");
+                return;
+            }
+            vstAudioPlayer.start();
+            updateVstPlayhead(timeline);
+            showVstLog("Playing dry audio beside the loaded VST editor.");
+        });
+        findViewById(R.id.BTStop).setOnClickListener(view -> {
+            if (vstAudioPlayer != null) {
+                vstAudioPlayer.pause();
+                vstAudioPlayer.seekTo(0);
+            }
+            timeline.setPlayhead(0f);
+        });
+    }
+
+    private void updateVstPlayhead(dev.vstbridge.android.AudioTimelineView timeline) {
+        if (vstAudioPlayer == null || !vstAudioPlayer.isPlaying()) return;
+        int duration = vstAudioPlayer.getDuration();
+        timeline.setPlayhead(duration > 0 ? vstAudioPlayer.getCurrentPosition() / (float) duration : 0f);
+        vstHandler.postDelayed(() -> updateVstPlayhead(timeline), 50);
+    }
+
+    private void showVstStatus(String message) {
+        if (!isVstSession() || vstStatus == null) return;
+        runOnUiThread(() -> vstStatus.setText(message));
+    }
+
+    private void showVstLog(String message) {
+        if (!isVstSession() || vstLog == null || message == null || message.isEmpty()) return;
+        runOnUiThread(() -> vstLog.setText(message));
+    }
+
+    private void showVstFailure(String message) {
+        if (!isVstSession()) return;
+        runOnUiThread(() -> {
+            vstStatus.setText("Plug-in failed to open");
+            vstLog.setText(message);
+            findViewById(R.id.BTRetrySession).setVisibility(View.VISIBLE);
+        });
+    }
+
+    private void onGuestTerminated(int status) {
+        if (!isVstSession()) {
+            exit();
+            return;
+        }
+        if (vstWindowMapped && status == 0) {
+            showVstStatus("Plug-in closed");
+            showVstLog("The Windows plug-in exited normally.");
+        } else {
+            showVstFailure("Windows host exited with code " + status + ". Common causes are a non-VST2 DLL, a missing dependency, or an unsupported copy-protection system.");
+        }
     }
 
     public XServer getXServer() {

@@ -8,7 +8,9 @@ build** workflow. The plain Android artifact does not contain the Windows host.
 3. Wait while VST Bridge installs the bundled root filesystem and automatically
    creates its private Wine environment. No Winlator screen or manual container is used.
 4. Tap **Done**. The Runtime card should report **ready**.
-5. Import an x86-64 Windows VST2 `.dll` and tap **Open editor**.
+5. Optionally tap **Load audio** for a native dry preview.
+6. Import an x86-64 Windows VST2 `.dll` and tap **Open editor**.
+7. The timeline opens on the left and the Windows VST editor opens in the right panel; startup stages and host errors stay visible.
 
 The app copies the selected DLL and `vst-bridge-host.exe` to
 `C:\vstbridge` inside the container, starts Box64 and Wine, opens an X server
@@ -18,7 +20,7 @@ Current boundaries:
 
 - VST2 x86-64 DLL editor hosting is implemented.
 - VST3 module scanning exists, but VST3 editor hosting is not implemented yet.
-- Audio/MIDI transport into an Android DAW is not implemented yet. The runtime
+- Native dry audio preview is implemented. Real-time audio/MIDI processing through the Windows VST is not implemented yet. The runtime
   audio bridge can serve Wine, but the host currently provides editor lifecycle
   rather than a real-time processing graph.
 - The APK intentionally targets Android API 28, matching Winlator's executable
