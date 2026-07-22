@@ -154,9 +154,19 @@ public final class MainActivity extends Activity {
             renderPlugins();
         });
         Button open = smallButton("Open editor");
-        open.setEnabled(runtime.state() == RuntimeBridge.State.READY && architecture.supported);
+        open.setEnabled(true);
         open.setOnClickListener(view -> {
             try {
+                if (runtime.state() != RuntimeBridge.State.READY) {
+                    throw new IllegalStateException(runtime.statusMessage());
+                }
+                if (!architecture.supported) {
+                    throw new IllegalStateException("This plug-in is " + architecture.label
+                            + ". Editor hosting currently requires an x86-64 Windows DLL.");
+                }
+                if (plugin.name.toLowerCase(Locale.ROOT).endsWith(".vst3")) {
+                    throw new IllegalStateException("VST3 editor hosting is not implemented yet. Use an x86-64 VST2 .dll.");
+                }
                 runtime.launch(new dev.vstbridge.android.runtime.LaunchRequest(
                         plugin.id, new File(plugin.path), 48000, 256, true));
             } catch (RuntimeException error) {
