@@ -12,8 +12,8 @@ android {
         applicationId = "dev.vstbridge.android"
         minSdk = 26
         targetSdk = 28
-        versionCode = 3
-        versionName = "0.2.1-runtime-diagnostic"
+        versionCode = 4
+        versionName = "0.3.0-private-runtime"
 
         ndk {
             abiFilters += listOf("arm64-v8a")

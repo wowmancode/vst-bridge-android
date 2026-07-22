@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.winlator.MainActivity" android:exported="false" android:theme="@style/AppThemeDark" android:screenOrientation="sensor" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
+        <activity android:name="dev.vstbridge.android.runtime.RuntimeSetupActivity" android:exported="false" android:screenOrientation="unspecified" />
         <activity android:name="com.winlator.XServerDisplayActivity" android:exported="false" android:theme="@style/AppThemeFullscreenDark" android:supportsPictureInPicture="true" android:launchMode="singleTask" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" android:screenOrientation="sensorLandscape" />
         <activity android:name="com.winlator.ControlsEditorActivity" android:exported="false" android:theme="@style/AppThemeFullscreenDark" android:screenOrientation="sensorLandscape" />
         <activity android:name="com.winlator.ExternalControllerBindingsActivity" android:exported="false" android:theme="@style/AppThemeDark" android:screenOrientation="sensor" />
