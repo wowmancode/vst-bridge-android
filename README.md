@@ -6,7 +6,7 @@ audio/MIDI layer and the plug-in's native Windows editor rendered through an
 Android-compatible X server.
 
 > [!IMPORTANT]
-> Version 0.2 integrates the pinned Winlator runtime, including Wine, Box64, the
+> Version 0.3 integrates pinned Wine/Box64 runtime components adapted from Winlator, including Wine, Box64, the
 > X server, and audio runtime. It can launch x86-64 VST2 `.dll` editors. VST3
 > scanning is present, while VST3 editor hosting and DAW audio/MIDI transport remain work in progress.
 
@@ -20,7 +20,7 @@ Android-compatible X server.
 - Maps imported plug-ins into a private Wine container and launches the Windows host.
 - Cloud-builds an x86-64 Windows host that scans VST3 modules and VST2 `.dll` files.
 - Produces a separate runtime APK with the tested Windows host embedded.
-- Installs the bundled rootfs, creates Winlator containers, and renders VST2 editors through X11.
+- Installs the bundled rootfs, automatically creates a private VST Bridge environment, and renders VST2 editors through X11.
 - Builds a debug APK entirely on GitHub Actions.
 
 ## Build on GitHub (phone-friendly)
@@ -41,7 +41,7 @@ Android UI / plug-in library
              |
        RuntimeBridge
              |
-  integrated Winlator runtime
+  VST-owned Wine/Box64 runtime
              |
   Box64 -> Wine -> Windows VST host
              |                |

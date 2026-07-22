@@ -5,11 +5,10 @@ build** workflow. The plain Android artifact does not contain the Windows host.
 
 1. Install the runtime APK on an ARM64 Android device.
 2. Open **VST Bridge** and tap **Set up runtime**.
-3. Wait for the bundled root filesystem to finish installing.
-4. In the container screen, tap **+**, keep the defaults, and create one
-   container. VST Bridge currently uses the first container.
-5. Return to VST Bridge. The Runtime card should report **ready**.
-6. Import an x86-64 Windows VST2 `.dll` and tap **Open editor**.
+3. Wait while VST Bridge installs the bundled root filesystem and automatically
+   creates its private Wine environment. No Winlator screen or manual container is used.
+4. Tap **Done**. The Runtime card should report **ready**.
+5. Import an x86-64 Windows VST2 `.dll` and tap **Open editor**.
 
 The app copies the selected DLL and `vst-bridge-host.exe` to
 `C:\vstbridge` inside the container, starts Box64 and Wine, opens an X server

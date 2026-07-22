@@ -6,7 +6,6 @@ import android.os.Build;
 
 import com.winlator.XServerDisplayActivity;
 import com.winlator.container.Container;
-import com.winlator.container.ContainerManager;
 import com.winlator.core.FileUtils;
 import com.winlator.xenvironment.RootFS;
 
@@ -15,7 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 
-/** Maps VST Bridge payloads into a Winlator container and starts its Wine/X server. */
+/** Maps VST Bridge payloads into its private Wine container and starts its Wine/X server. */
 public final class WinlatorRuntimeBridge implements RuntimeBridge {
     private final Context context;
     private final File hostPayload;
@@ -58,13 +57,13 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
             return "Runtime files are bundled but not installed. Tap Set up runtime.";
         }
         if (firstContainer() == null) {
-            return "Create a container in Runtime setup, then return here.";
+            return "The private Wine environment is not ready. Tap Set up runtime.";
         }
         return "Wine, Box64, X server, audio bridge, and Windows host are ready.";
     }
 
     public static void openSetup(Context context) {
-        context.startActivity(new Intent(context, com.winlator.MainActivity.class));
+        context.startActivity(new Intent(context, RuntimeSetupActivity.class));
     }
 
     @Override
@@ -72,7 +71,7 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
         if (state() != State.READY) throw new IllegalStateException(statusMessage());
 
         Container container = firstContainer();
-        if (container == null) throw new IllegalStateException("No Winlator container is available.");
+        if (container == null) throw new IllegalStateException("The VST Bridge Wine environment is unavailable.");
         File guestDir = new File(container.getRootDir(), ".wine/drive_c/vstbridge");
         if (!guestDir.isDirectory() && !guestDir.mkdirs()) {
             throw new IllegalStateException("Could not create the VST directory in the Wine container.");
@@ -98,8 +97,7 @@ public final class WinlatorRuntimeBridge implements RuntimeBridge {
 
     private Container firstContainer() {
         if (!RootFS.find(context).isValid()) return null;
-        ContainerManager manager = new ContainerManager(context);
-        return manager.getContainers().isEmpty() ? null : manager.getContainers().get(0);
+        return VstRuntimeManager.findContainer(context);
     }
 
     private static String safeId(String value) {

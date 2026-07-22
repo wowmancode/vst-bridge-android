@@ -843,7 +843,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             if (!hasD3D10DllFile[0]) restoreBuiltinDllFiles("d3d10.dll", "d3d10_1.dll");
         }
 
-        GeneralComponents.extractFile(GeneralComponents.Type.VKD3D, this, dxwrapperConfig[1].get("version"), DefaultVersion.VKD3D);
+        if (!dxwrapper.equals(DXWrappers.WINED3D)) {
+            GeneralComponents.extractFile(GeneralComponents.Type.VKD3D, this, dxwrapperConfig[1].get("version"), DefaultVersion.VKD3D);
+        }
 
         File containerSysWoW64Dir = new File(rootDir, RootFS.WINEPREFIX+"/drive_c/windows/syswow64");
         FileUtils.delete(new File(containerSysWoW64Dir, "ddraw_.dll"));
