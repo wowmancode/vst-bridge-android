@@ -46,10 +46,8 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
     @Override
     public void stop() {
         synchronized (lock) {
-            if (pid != -1) {
-                Process.killProcess(pid);
-                pid = -1;
-            }
+            if (pid > 0) Process.killProcess(pid);
+            pid = -1;
         }
     }
 

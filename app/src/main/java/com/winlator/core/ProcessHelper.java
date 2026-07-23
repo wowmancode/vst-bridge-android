@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,14 +72,28 @@ public abstract class ProcessHelper {
             for (String name : envVars) environment.put(name, envVars.get(name));
 
             java.lang.Process process = processBuilder.start();
-            pid = (int)process.pid();
 
             if (!debugCallbacks.isEmpty()) {
                 createDebugThread(process.getInputStream());
                 createDebugThread(process.getErrorStream());
             }
-
             if (terminationCallback != null) createWaitForThread(process, terminationCallback);
+
+            try {
+                Field pidField = process.getClass().getDeclaredField("pid");
+                pidField.setAccessible(true);
+                pid = pidField.getInt(process);
+                pidField.setAccessible(false);
+            }
+            catch (Exception pidError) {
+                pid = 0;
+                synchronized (debugCallbacks) {
+                    for (Callback<String> callback : debugCallbacks) {
+                        callback.call("Wine started; Android PID unavailable: "
+                                + pidError.getClass().getSimpleName());
+                    }
+                }
+            }
         }
         catch (Exception e) {
             synchronized (debugCallbacks) {

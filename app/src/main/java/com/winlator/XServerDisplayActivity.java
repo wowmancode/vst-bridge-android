@@ -583,9 +583,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         guestProgramLauncherComponent.setEnvVars(envVars);
         guestProgramLauncherComponent.setStartCallback(pid -> {
-            if (pid > 0) {
+            if (pid >= 0) {
                 showVstStatus("Wine process started • waiting for editor…");
-                showVstLog("Box64/Wine started as Android process " + pid + ". Waiting for the plug-in window.");
+                showVstLog(pid > 0
+                        ? "Box64/Wine started as Android process " + pid + ". Waiting for the plug-in window."
+                        : "Box64/Wine started; Android PID is unavailable. Waiting for the plug-in window.");
             } else showVstFailure("Box64/Wine could not start. Check the runtime message below.");
         });
         guestProgramLauncherComponent.setTerminationCallback(this::onGuestTerminated);
