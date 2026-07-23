@@ -72,19 +72,37 @@ public abstract class ProcessHelper {
             for (String name : envVars) environment.put(name, envVars.get(name));
 
             java.lang.Process process = processBuilder.start();
-            Field pidField = process.getClass().getDeclaredField("pid");
-            pidField.setAccessible(true);
-            pid = pidField.getInt(process);
-            pidField.setAccessible(false);
 
             if (!debugCallbacks.isEmpty()) {
                 createDebugThread(process.getInputStream());
                 createDebugThread(process.getErrorStream());
             }
-
             if (terminationCallback != null) createWaitForThread(process, terminationCallback);
+
+            try {
+                Field pidField = process.getClass().getDeclaredField("pid");
+                pidField.setAccessible(true);
+                pid = pidField.getInt(process);
+                pidField.setAccessible(false);
+            }
+            catch (Exception pidError) {
+                pid = 0;
+                synchronized (debugCallbacks) {
+                    for (Callback<String> callback : debugCallbacks) {
+                        callback.call("Wine started; Android PID unavailable: "
+                                + pidError.getClass().getSimpleName());
+                    }
+                }
+            }
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+            synchronized (debugCallbacks) {
+                for (Callback<String> callback : debugCallbacks) {
+                    callback.call("Process start failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                }
+            }
+            if (terminationCallback != null) terminationCallback.call(127);
+        }
         return pid;
     }
 

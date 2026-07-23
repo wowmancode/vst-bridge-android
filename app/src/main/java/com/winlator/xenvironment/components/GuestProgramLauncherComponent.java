@@ -29,6 +29,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
     private EnvVars envVars;
     private String box64Preset = Box64Preset.CONSERVATIVE;
     private Callback<Integer> terminationCallback;
+    private Callback<Integer> startCallback;
     private static final Object lock = new Object();
 
     @Override
@@ -38,17 +39,20 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             extractBox64File();
             copyDefaultBox64RCFile();
             pid = execGuestProgram();
+            if (startCallback != null) startCallback.call(pid);
         }
     }
 
     @Override
     public void stop() {
         synchronized (lock) {
-            if (pid != -1) {
-                Process.killProcess(pid);
-                pid = -1;
-            }
+            if (pid > 0) Process.killProcess(pid);
+            pid = -1;
         }
+    }
+
+    public void setStartCallback(Callback<Integer> startCallback) {
+        this.startCallback = startCallback;
     }
 
     public Callback<Integer> getTerminationCallback() {
